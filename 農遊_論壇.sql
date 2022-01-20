@@ -1,0 +1,211 @@
+/*農遊與論壇區資料重刷*/
+-- CREATE DATABASE IF NOT EXISTS CFA104G2;
+
+USE CFA104G2;
+
+# 移除農遊Table
+DROP TABLE IF EXISTS FARM_TRAVEL_PARTNER;
+DROP TABLE IF EXISTS FARM_TRAVEL_ORDER;
+DROP TABLE IF EXISTS FARM_TRAVEL_COLLECTION;
+DROP TABLE IF EXISTS FARM_TRAVEL_REPORT;
+DROP TABLE IF EXISTS FARM_TRAVEL_TAG_DETAILS;
+DROP TABLE IF EXISTS FARM_TRAVEL_TAG;
+DROP TABLE IF EXISTS FARM_TRAVEL;
+# 移除論壇Table
+DROP TABLE IF EXISTS COMMENTS_REPORT;
+DROP TABLE IF EXISTS COMMENTS;
+DROP TABLE IF EXISTS ARTICLE_REPORT;
+DROP TABLE IF EXISTS ARTICLE_COLLECTION;
+DROP TABLE IF EXISTS ARTICLE_PIC;
+DROP TABLE IF EXISTS ARTICLE;
+DROP TABLE IF EXISTS ARTICLE_TYPE;
+-- DROP TABLE IF EXISTS F_MEM;
+-- DROP TABLE IF EXISTS MEM;
+
+# 暫時建立用來做FK
+-- CREATE TABLE MEM (
+-- MEM_ID INT auto_increment NOT NULL PRIMARY KEY comment '會員編號'
+-- );
+
+# 暫時建立用來做FK
+-- CREATE TABLE F_MEM (
+-- F_MEM_ID INT auto_increment NOT NULL PRIMARY KEY comment '小農編號'
+-- );
+
+# 農遊行程
+CREATE TABLE FARM_TRAVEL(
+ FARM_TRAVEL_ID INT NOT NULL PRIMARY KEY auto_increment comment "農遊行程編號",
+ MEM_ID INT Not Null comment "一般會員編號",
+ F_MEM_ID INT Not Null comment "小農編號",
+ FARM_TRAVEL_TITLE VARCHAR(50) Not Null comment "農遊標題",
+ FARM_TRAVEL_IMG LONGBLOB comment "農遊封面圖",
+ FARM_TRAVEL_INFO VARCHAR(1500) Not Null comment "農遊資訊",
+ FARM_TRAVEL_START DATETIME Not Null comment "農遊行程起",
+ FARM_TRAVEL_END DATETIME Not Null comment "農遊行程迄",
+ FARM_TRAVEL_FEE INT Not Null comment "農遊費用",
+ TRAVEL_APPLY_START DATETIME Not Null comment "農遊報名開始",
+ TRAVEL_APPLY_END DATETIME Not Null comment "農遊報名截止",
+ FARM_TRAVEL_MIN INT Not Null comment "最少人數",
+ FARM_TRAVEL_MAX INT Not Null comment "最大人數",
+ FARM_TRAVEL_NOW INT Not Null comment "目前報名人數",
+ FARM_TRAVEL_STATE TINYINT Not Null comment "農遊狀態 0:未開放 1:報名中 2:已成團 3:已額滿 4:已取消",
+ FOREIGN KEY(MEM_ID) REFERENCES MEM(MEM_ID),
+ FOREIGN KEY(F_MEM_ID) REFERENCES F_MEM(F_MEM_ID)
+);
+
+# 農遊訂單
+CREATE TABLE FARM_TRAVEL_ORDER(
+ ORDER_ID INT Not Null PRIMARY KEY auto_increment comment "訂單編號",
+ MEM_ID INT Not Null comment "一般會員編號",
+ FARM_TRAVEL_ID INT Not Null comment "農遊行程編號",
+ F_MEM_ID INT Not Null comment "小農會員編號",
+ ORDER_TIME DATETIME Not Null comment "訂單日期",
+ PEOPLE_NUM	INT Not Null comment "報名人數",
+ ORDER_FEE INT Not Null comment "訂單金額",
+ FARM_TRAVEL_START DATETIME Not Null comment "農遊行程起",
+ FARM_TRAVEL_END DATETIME Not Null comment "農遊行程迄",
+ ORDER_STATE TINYINT Not Null comment "訂單狀態 0:待付款 1:訂單成立 2:訂單已完成 3:訂單已取消",
+ ORDER_PAYMENT TINYINT 	comment "付款方式 0:信用卡 1:銀行轉帳",
+ REFUND_TIME DATETIME comment "退款時間",
+ FARM_TRAVEL_STARS INT comment "農遊星數",
+ MEM_ID_STARS INT comment "會員星數",
+ ORDER_MEMO VARCHAR(250) comment "訂單備註",
+ FOREIGN KEY(MEM_ID) REFERENCES MEM(MEM_ID),
+ FOREIGN KEY(FARM_TRAVEL_ID) REFERENCES FARM_TRAVEL(FARM_TRAVEL_ID),
+ FOREIGN KEY(F_MEM_ID) REFERENCES F_MEM(F_MEM_ID)
+);
+
+# 農遊小夥伴
+CREATE TABLE FARM_TRAVEL_PARTNER(
+ PARTNER_ID INT Not Null comment "農遊小夥伴編號",
+ ORDER_ID INT Not Null comment "訂單編號",
+ PARTNER_NAME VARCHAR(20) Not Null comment "小夥伴姓名",
+ PARTNER_PHONE VARCHAR(20) Not Null comment "小夥伴電話",
+ GUARDIAN_NAME VARCHAR(20) Not Null comment "緊急聯絡人",
+ GUARDIAN_PHONE VARCHAR(20) Not Null comment "緊急連絡人電話",
+ APPLY_MEM_ID INT Not Null comment "報名會員編號",
+ FOREIGN KEY(ORDER_ID) REFERENCES FARM_TRAVEL_ORDER(ORDER_ID),
+ FOREIGN KEY(APPLY_MEM_ID) REFERENCES FARM_TRAVEL_ORDER(MEM_ID)
+);
+
+# 農遊收藏
+CREATE TABLE FARM_TRAVEL_COLLECTION(
+ MEM_ID INT Not Null comment "會員編號",
+ FARM_TRAVEL_ID INT Not Null comment "農遊行程編號",
+ COLLECTION_TIME DATETIME Not Null comment "收藏時間",
+ FOREIGN KEY(MEM_ID) REFERENCES MEM(MEM_ID),
+ FOREIGN KEY(FARM_TRAVEL_ID) REFERENCES FARM_TRAVEL(FARM_TRAVEL_ID)
+);
+
+# 農遊檢舉
+CREATE TABLE FARM_TRAVEL_REPORT(
+ REPORT_ID INT Not Null PRIMARY KEY auto_increment comment "檢舉單編號",
+ MEM_ID INT Not Null comment "一般會員編號",
+ FARM_TRAVEL_ID INT Not Null comment "農遊行程編號",
+ REPORT_REASON VARCHAR(500) Not Null comment "檢舉事由",
+ REPORT_TIME DATETIME Not Null comment "檢舉日期",
+ REPORT_STATE TINYINT Not Null comment "檢舉狀態 0:未處理 1:檢舉通過 2:檢舉未通過",
+ REPORT_NOTE VARCHAR(300) comment "檢舉備註",
+ FOREIGN KEY(FARM_TRAVEL_ID) REFERENCES FARM_TRAVEL(FARM_TRAVEL_ID),
+ FOREIGN KEY(MEM_ID) REFERENCES MEM(MEM_ID)
+);
+
+# 農遊標籤
+CREATE TABLE FARM_TRAVEL_TAG( 
+ TAG_ID INT Not Null PRIMARY KEY auto_increment comment "標籤編號",
+ TAG_NAME VARCHAR(20) Not Null comment "標籤名稱",
+ TAG_TIMES INT Not Null comment "標籤使用次數"
+);
+
+# 農遊標籤明細
+CREATE TABLE FARM_TRAVEL_TAG_DETAILS(
+ FARM_TRAVEL_ID INT Not Null comment "農遊行程編號",
+ TAG_ID INT Not Null comment "標籤編號",
+ FOREIGN KEY(FARM_TRAVEL_ID) REFERENCES FARM_TRAVEL(FARM_TRAVEL_ID),
+ FOREIGN KEY(TAG_ID) REFERENCES FARM_TRAVEL_TAG(TAG_ID)
+);
+
+# 文章類別
+CREATE TABLE ARTICLE_TYPE(
+ ARTICLE_TYPE_ID INT NOT NuLL PRIMARY KEY auto_increment comment "文章類別編號",
+ ARTICLE_TYPE_IMG LONGBLOB comment "文章類別圖片",
+ ARTICLE_TYPE_TEXT VARCHAR(100) Not Null comment "文章類別敘述"
+);
+
+# 小農論壇文章
+CREATE TABLE ARTICLE(
+ ARTICLE_ID INT NOT NULL PRIMARY KEY auto_increment comment "文章編號",
+ ARTICLE_TITLE VARCHAR(50) Not Null comment "文章標題",
+ MEM_ID INT Not Null comment "一般會員編號",
+ ARTICLE_TYPE_ID INT Not Null comment "文章類別編號",
+ ARTICLE_TIME TIMESTAMP Not Null comment "文章發布時間",
+ ARTICLE_CONTENT VARCHAR(3000) Not Null comment "文章內容",
+ ARTICLE_IMG LONGBLOB comment "文章首頁圖",
+ ARTICLE_LIKE INT Not Null comment "文章讚數",
+ COMMENTS_NUM INT Not Null comment "文章留言次數(樓層)",
+ ARTICLE_STATE TINYINT  Not Null comment "文章狀態 0 : 顯示 1 : 不顯示",
+ FOREIGN KEY(MEM_ID) REFERENCES MEM(MEM_ID),
+ FOREIGN KEY(ARTICLE_TYPE_ID) REFERENCES ARTICLE_TYPE(ARTICLE_TYPE_ID),
+ UNIQUE (COMMENTS_NUM)
+);
+
+# 文章照片
+CREATE TABLE ARTICLE_PIC(
+ARTICLE_PIC_ID	INT	Not Null PRIMARY KEY auto_increment comment"文章照片編號",
+ARTICLE_ID	INT	Not Null comment"文章編號",
+ARTICLE_PIC	LONGBLOB comment"文章照片",
+FOREIGN KEY(ARTICLE_ID) REFERENCES ARTICLE(ARTICLE_ID)
+);
+
+# 小農論壇留言
+CREATE TABLE COMMENTS(
+COMMENTS_ID INT Not Null PRIMARY KEY auto_increment comment "留言編號",
+ARTICLE_ID INT Not Null comment "文章編號",
+COMMENTS_NUM INT Not Null comment "留言次數(樓層)",
+MEM_ID INT Not Null comment "一般會員編號",
+COMMENTS_TIME DATETIME Not Null comment "留言時間",
+COMMENTS_CONTENT VARCHAR(1000) Not Null comment "留言內容",
+COMMENTS_LIKE INT Not Null comment "留言讚數",
+COMMENTS_IMG LONGBLOB comment "文章圖片",
+COMMENTS_STATE TINYINT Not Null comment "留言狀態 0:顯示 1:不顯示",
+FOREIGN KEY(MEM_ID) REFERENCES MEM(MEM_ID),
+FOREIGN KEY(ARTICLE_ID) REFERENCES ARTICLE(ARTICLE_ID),
+FOREIGN KEY(COMMENTS_NUM) REFERENCES ARTICLE(COMMENTS_NUM)
+);
+
+# 小農論壇文章收藏
+CREATE TABLE ARTICLE_COLLECTION(
+ARTICLE_ID	INT	Not Null comment "文章編號",
+MEM_ID	INT	Not Null comment "會員編號",
+ARTICLE_FOLLOW_DATE	DATETIME Not Null comment "收藏日期",
+FOREIGN KEY(MEM_ID) REFERENCES MEM(MEM_ID),
+FOREIGN KEY(ARTICLE_ID) REFERENCES ARTICLE(ARTICLE_ID)
+);
+
+# 小農論壇文章檢舉
+CREATE TABLE ARTICLE_REPORT(
+ARTICLE_REPORT_ID INT Not Null PRIMARY KEY auto_increment comment "文章檢舉編號",
+MEM_ID	INT	 Not Null comment "一般會員編號",
+ARTICLE_ID	INT	Not Null comment "文章編號",
+REPORT_TIME	DATETIME Not Null comment "檢舉時間",
+REPORT_REASON VARCHAR(500) Not Null comment "檢舉事由",
+REPORT_STATE TINYINT Not Null comment "檢舉狀態 0: 未處理 1: 檢舉通過 2: 檢舉未通過",
+REPORT_NOTE	VARCHAR(300) comment "檢舉備註",
+FOREIGN KEY(MEM_ID) REFERENCES MEM(MEM_ID),
+FOREIGN KEY(ARTICLE_ID) REFERENCES ARTICLE(ARTICLE_ID)
+);
+
+# 留言檢舉
+CREATE TABLE COMMENTS_REPORT(
+COMMENTS_REPORT_ID INT Not Null PRIMARY KEY auto_increment comment"留言檢舉編號",
+ARTICLE_ID INT Not Null comment "文章編號",
+COMMENTS_NUM INT Not Null comment "留言次數",
+MEM_ID	INT	Not Null comment "一般會員編號",
+REPORT_REASON VARCHAR(500) Not Null comment "檢舉事由",
+REPORT_TIME	DATETIME Not Null comment "檢舉日期",
+REPORT_STATE TINYINT Not Null comment "檢舉狀態 0: 未處理 1: 檢舉通過 2: 檢舉未通過",
+REPORT_NOTE	VARCHAR(300) comment "檢舉備註",
+FOREIGN KEY(MEM_ID) REFERENCES MEM(MEM_ID),
+FOREIGN KEY(ARTICLE_ID) REFERENCES ARTICLE(ARTICLE_ID),
+FOREIGN KEY(COMMENTS_NUM) REFERENCES ARTICLE(COMMENTS_NUM)
+);
